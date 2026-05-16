@@ -193,6 +193,20 @@ class Account extends Model {
 php artisan key:generate
 php artisan migrate --force
 php artisan storage:link
+```
+
+**Filament magyar fordítások publikálása:**
+```bash
+php artisan vendor:publish --tag=filament-panels-translations
+php artisan vendor:publish --tag=filament-forms-translations
+php artisan vendor:publish --tag=filament-tables-translations
+php artisan vendor:publish --tag=filament-actions-translations
+php artisan vendor:publish --tag=filament-notifications-translations
+php artisan vendor:publish --tag=filament-infolists-translations
+php artisan vendor:publish --tag=filament-support-translations
+```
+
+```bash
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
