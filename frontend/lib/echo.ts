@@ -5,9 +5,11 @@ declare global {
   interface Window { Pusher: typeof Pusher }
 }
 
-let echo: Echo | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let echo: Echo<any> | null = null;
 
-export function getEcho(): Echo {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getEcho(): Echo<any> {
   if (!echo) {
     window.Pusher = Pusher;
     echo = new Echo({
