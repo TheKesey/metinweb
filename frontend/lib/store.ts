@@ -46,6 +46,7 @@ export const useStore = create<Store>((set, get) => ({
         });
       } catch {}
       localStorage.removeItem("auth_token");
+      sessionStorage.removeItem("auth_token");
     }
     set({ user: null });
   },

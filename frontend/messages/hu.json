@@ -5,7 +5,7 @@
   "nav_online": "Online",
   "nav_shop": "Itemshop",
   "nav_download": "Letöltés",
-  "nav_guide": "Kalauz",
+  "nav_guide": "Wiki",
   "nav_account": "Fiókom",
   "login": "Belépés",
   "logout": "Kijelentkezés",
@@ -99,7 +99,7 @@
   "search_player": "Játékos keresése…",
 
   "news_title": "Hírek",
-  "news_sub": "Frissítések, eseménynapló, dev blog",
+  "news_sub": "Frissítések, események, hírek",
   "tag_news": "Hír",
   "tag_patch": "Patch",
   "tag_event": "Esemény",
@@ -188,7 +188,7 @@
   "loading": "Töltés…",
   "error": "Hiba",
 
-  "guide_title": "Kalauz",
+  "guide_title": "Wiki",
   "guide_sub": "Minden, amit tudnod kell az induláshoz és az endgame-hez.",
   "search": "Keresés"
 }

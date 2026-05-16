@@ -70,8 +70,14 @@ export function AuthModal() {
     registerForm.reset();
   }
 
-  function storeAuth(token: string, user: { username: string; email: string; member_since: string }) {
-    localStorage.setItem("auth_token", token);
+  function storeAuth(token: string, user: { username: string; email: string; member_since: string }, remember: boolean) {
+    if (remember) {
+      localStorage.setItem("auth_token", token);
+      sessionStorage.removeItem("auth_token");
+    } else {
+      sessionStorage.setItem("auth_token", token);
+      localStorage.removeItem("auth_token");
+    }
     setUser({ id: user.username, username: user.username, email: user.email, coins: 0, vip_tier: 0, member_since: user.member_since });
     close();
   }
@@ -91,7 +97,7 @@ export function AuthModal() {
         setError(msg);
         return;
       }
-      storeAuth(json.token, json.user);
+      storeAuth(json.token, json.user, !!data.remember);
     } catch {
       setError(t("error"));
     } finally {
@@ -114,7 +120,7 @@ export function AuthModal() {
         setError(msg);
         return;
       }
-      storeAuth(json.token, json.user);
+      storeAuth(json.token, json.user, true);
     } catch {
       setError(t("error"));
     } finally {
@@ -184,7 +190,7 @@ export function AuthModal() {
           <form onSubmit={loginForm.handleSubmit(handleLogin)} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label className="field-label">{t("username")}</label>
-              <input {...loginForm.register("username")} className={`field${loginForm.formState.errors.username ? " error" : ""}`} placeholder="Vasszív" autoFocus />
+              <input {...loginForm.register("username")} className={`field${loginForm.formState.errors.username ? " error" : ""}`} placeholder={t("username")} autoFocus />
             </div>
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
@@ -218,12 +224,12 @@ export function AuthModal() {
           <form onSubmit={registerForm.handleSubmit(handleRegister)} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div>
               <label className="field-label">{t("username")}</label>
-              <input {...registerForm.register("username")} className={`field${registerForm.formState.errors.username ? " error" : ""}`} placeholder="Vasszív" autoFocus />
+              <input {...registerForm.register("username")} className={`field${registerForm.formState.errors.username ? " error" : ""}`} placeholder={t("username")} autoFocus />
               {registerForm.formState.errors.username && <div className="field-error">{t(registerForm.formState.errors.username.message as "auth_err_username")}</div>}
             </div>
             <div>
               <label className="field-label">{t("email")}</label>
-              <input {...registerForm.register("email")} type="email" className={`field${registerForm.formState.errors.email ? " error" : ""}`} placeholder="vassziv@example.com" />
+              <input {...registerForm.register("email")} type="email" className={`field${registerForm.formState.errors.email ? " error" : ""}`} placeholder="email@example.com" />
               {registerForm.formState.errors.email && <div className="field-error">{t(registerForm.formState.errors.email.message as "auth_err_email")}</div>}
             </div>
             <div>
@@ -264,7 +270,7 @@ export function AuthModal() {
               <input
                 type="email"
                 className="field"
-                placeholder="vassziv@example.com"
+                placeholder="email@example.com"
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
                 autoFocus

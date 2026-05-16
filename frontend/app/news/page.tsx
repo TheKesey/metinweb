@@ -184,7 +184,6 @@ export default function NewsPage() {
     <div className="page-enter">
       <div className="container">
         <div style={{ padding: "40px 0 28px" }}>
-          <div className="eyebrow" style={{ color: "var(--accent)", marginBottom: 10 }}>BLOG</div>
           <h1 className="display accent-text glow-accent hero-page-title" style={{ fontSize: 64, letterSpacing: "0.02em" }}>
             {t("news_title")}
           </h1>

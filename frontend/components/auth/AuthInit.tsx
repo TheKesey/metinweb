@@ -9,15 +9,16 @@ export function AuthInit() {
   const setUser = useStore((s) => s.setUser);
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("auth_token") ?? sessionStorage.getItem("auth_token");
     if (!token) return;
 
     fetch(`${API_URL}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     })
       .then((res) => {
         if (!res.ok) {
           localStorage.removeItem("auth_token");
+          sessionStorage.removeItem("auth_token");
           return null;
         }
         return res.json();
@@ -25,7 +26,10 @@ export function AuthInit() {
       .then((data) => {
         if (data) setUser({ id: data.username, username: data.username, email: data.email, coins: 0, vip_tier: 0, member_since: data.member_since });
       })
-      .catch(() => localStorage.removeItem("auth_token"));
+      .catch(() => {
+        localStorage.removeItem("auth_token");
+        sessionStorage.removeItem("auth_token");
+      });
   }, [setUser]);
 
   return null;
