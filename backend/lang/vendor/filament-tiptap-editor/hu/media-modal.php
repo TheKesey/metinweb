@@ -1,22 +1,22 @@
 <?php
 
 return [
-    'heading' => 'Média beszúrása',
+    'heading' => [
+        'update' => 'Média frissítése',
+        'insert' => 'Média beszúrása',
+    ],
+    'buttons' => [
+        'cancel' => 'Mégsem',
+        'insert' => 'Beszúrás',
+    ],
     'labels' => [
-        'file'        => 'Fájl',
-        'link'        => 'URL',
-        'alt'         => 'Alternatív szöveg',
-        'title'       => 'Cím',
-        'width'       => 'Szélesség',
-        'height'      => 'Magasság',
-        'loading'     => 'Betöltési mód',
-        'lazy'        => 'Lusta (lazy)',
-        'eager'       => 'Azonnali (eager)',
-        'type'        => 'Típus',
-        'image'       => 'Kép',
-        'video'       => 'Videó',
-        'submit'      => 'Beszúrás',
-        'drop_file'   => 'Fájl húzása ide, vagy',
-        'browse'      => 'tallózás',
+        'width'          => 'Szélesség',
+        'height'         => 'Magasság',
+        'file'           => 'Fájl',
+        'link_text'      => 'Link szövege',
+        'alt'            => 'Alternatív szöveg',
+        'alt_helper_text'=> 'A kép céljának leírása.',
+        'title'          => 'Cím',
+        'lazy'           => 'Lusta betöltés',
     ],
 ];
