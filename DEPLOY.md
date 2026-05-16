@@ -321,7 +321,7 @@ sudo pfctl -f /etc/pf.conf
 pm2 start npm --name "kesey-frontend" -- start
 
 # Reverb WebSocket szerver
-pm2 start --name "kesey-reverb" -- php /var/www/metinweb/backend/artisan reverb:start --host=0.0.0.0 --port=8080
+pm2 start /var/www/metinweb/backend/artisan --name "kesey-reverb" --interpreter php -- reverb:start --host=0.0.0.0 --port=8080
 
 pm2 save
 pm2 startup
