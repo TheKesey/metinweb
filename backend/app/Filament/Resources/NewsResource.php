@@ -197,12 +197,10 @@ class NewsResource extends Resource
                 ->schema([
                     Forms\Components\TextInput::make("title_{$lang->code}")
                         ->label('Cím')
-                        ->maxLength(255)
-                        ->dehydrated(false),
+                        ->maxLength(255),
                     Forms\Components\RichEditor::make("content_{$lang->code}")
                         ->label('Tartalom')
-                        ->toolbarButtons($toolbar)
-                        ->dehydrated(false),
+                        ->toolbarButtons($toolbar),
                 ]);
         })->toArray();
     }

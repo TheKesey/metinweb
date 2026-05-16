@@ -22,20 +22,23 @@ class CreateNews extends CreateRecord
     protected function handleRecordCreation(array $data): Model
     {
         $extraLangs = Language::active()->where('is_default', false);
+        $translations = [];
 
         foreach ($extraLangs as $lang) {
+            $translations[$lang->code] = [
+                'title'   => $data["title_{$lang->code}"]   ?? null,
+                'content' => $data["content_{$lang->code}"] ?? null,
+            ];
             unset($data["title_{$lang->code}"], $data["content_{$lang->code}"]);
         }
 
         /** @var News $record */
         $record = static::getModel()::create($data);
 
-        foreach ($extraLangs as $lang) {
-            $title   = request("title_{$lang->code}");
-            $content = request("content_{$lang->code}");
+        foreach ($translations as $locale => ['title' => $title, 'content' => $content]) {
             if ($title || $content) {
                 $record->translations()->create([
-                    'locale'  => $lang->code,
+                    'locale'  => $locale,
                     'title'   => $title   ?? $record->title,
                     'content' => $content ?? $record->content,
                 ]);
