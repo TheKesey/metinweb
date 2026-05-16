@@ -125,6 +125,10 @@ class NewsResource extends Resource
                     ->label('Publikálva')
                     ->dateTime('Y.m.d H:i')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Létrehozva')
+                    ->dateTime('Y.m.d H:i')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Szerző')
                     ->sortable(),
@@ -148,7 +152,7 @@ class NewsResource extends Resource
                 Tables\Actions\EditAction::make()->label('Szerkesztés'),
                 Tables\Actions\DeleteAction::make()->label('Törlés'),
             ])
-            ->defaultSort('published_at', 'desc');
+            ->defaultSort('created_at', 'desc');
     }
 
     private static function buildLanguageTabs(): array
