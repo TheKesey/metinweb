@@ -70,6 +70,11 @@ export function AuthModal() {
     registerForm.reset();
   }
 
+  function switchTo(view: "login" | "register" | "forgot") {
+    setError("");
+    setAuthModal(view);
+  }
+
   function storeAuth(token: string, user: { username: string; email: string; member_since: string }, remember: boolean) {
     if (remember) {
       localStorage.setItem("auth_token", token);
@@ -195,7 +200,7 @@ export function AuthModal() {
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                 <label className="field-label" style={{ marginBottom: 0 }}>{t("password")}</label>
-                <button type="button" onClick={() => setAuthModal("forgot")} style={{ background: "none", border: 0, fontSize: 11, color: "var(--accent)", cursor: "pointer", padding: 0 }}>
+                <button type="button" onClick={() => switchTo("forgot")} style={{ background: "none", border: 0, fontSize: 11, color: "var(--accent)", cursor: "pointer", padding: 0 }}>
                   {t("forgot_password")}
                 </button>
               </div>
@@ -212,7 +217,7 @@ export function AuthModal() {
             </button>
             <div style={{ textAlign: "center", fontSize: 13, color: "var(--fg-muted)" }}>
               {t("no_account")}{" "}
-              <button type="button" onClick={() => setAuthModal("register")} style={{ background: "none", border: 0, color: "var(--accent)", cursor: "pointer", fontSize: 13 }}>
+              <button type="button" onClick={() => switchTo("register")} style={{ background: "none", border: 0, color: "var(--accent)", cursor: "pointer", fontSize: 13 }}>
                 {t("register")}
               </button>
             </div>
@@ -255,7 +260,7 @@ export function AuthModal() {
             </button>
             <div style={{ textAlign: "center", fontSize: 13, color: "var(--fg-muted)" }}>
               {t("have_account")}{" "}
-              <button type="button" onClick={() => setAuthModal("login")} style={{ background: "none", border: 0, color: "var(--accent)", cursor: "pointer", fontSize: 13 }}>
+              <button type="button" onClick={() => switchTo("login")} style={{ background: "none", border: 0, color: "var(--accent)", cursor: "pointer", fontSize: 13 }}>
                 {t("sign_in")}
               </button>
             </div>
@@ -282,7 +287,7 @@ export function AuthModal() {
               {loading ? t("loading") : t("forgot_send")}
             </button>
             <div style={{ textAlign: "center" }}>
-              <button type="button" onClick={() => setAuthModal("login")} style={{ background: "none", border: 0, color: "var(--fg-muted)", cursor: "pointer", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <button type="button" onClick={() => switchTo("login")} style={{ background: "none", border: 0, color: "var(--fg-muted)", cursor: "pointer", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <ArrowLeftIcon size={12} /> {t("back_to_login")}
               </button>
             </div>

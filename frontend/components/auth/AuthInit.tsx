@@ -16,20 +16,18 @@ export function AuthInit() {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     })
       .then((res) => {
-        if (!res.ok) {
+        if (res.status === 401) {
           localStorage.removeItem("auth_token");
           sessionStorage.removeItem("auth_token");
           return null;
         }
+        if (!res.ok) return null;
         return res.json();
       })
       .then((data) => {
         if (data) setUser({ id: data.username, username: data.username, email: data.email, coins: 0, vip_tier: 0, member_since: data.member_since });
       })
-      .catch(() => {
-        localStorage.removeItem("auth_token");
-        sessionStorage.removeItem("auth_token");
-      });
+      .catch(() => {});
   }, [setUser]);
 
   return null;

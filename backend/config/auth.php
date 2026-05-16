@@ -77,9 +77,10 @@ return [
         // Metin2 game server account table — used by frontend API
         'metin2_accounts' => [
             'driver' => 'metin2',
-            'connection' => 'metin2',
+            'model'  => \App\Models\Account::class,
+            'connection' => 'account',
             'table' => env('METIN2_ACCOUNT_TABLE', 'account'),
-            'hash' => env('METIN2_PASSWORD_HASH', 'md5'),
+            'hash' => env('METIN2_PASSWORD_HASH', 'mysql_password'),
         ],
     ],
 
