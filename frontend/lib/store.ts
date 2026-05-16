@@ -3,10 +3,13 @@
 import { create } from "zustand";
 import type { CartItem, User } from "@/types";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 interface Store {
   // Auth
   user: User | null;
   setUser: (u: User | null) => void;
+  logout: () => Promise<void>;
 
   // Cart
   cart: CartItem[];
@@ -33,6 +36,19 @@ interface Store {
 export const useStore = create<Store>((set, get) => ({
   user: null,
   setUser: (u) => set({ user: u }),
+  logout: async () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    if (token) {
+      try {
+        await fetch(`${API_URL}/api/auth/logout`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch {}
+      localStorage.removeItem("auth_token");
+    }
+    set({ user: null });
+  },
 
   cart: [],
   cartOpen: false,

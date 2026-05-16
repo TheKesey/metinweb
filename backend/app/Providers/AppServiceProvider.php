@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Auth\Metin2UserProvider;
+use App\Models\PersonalAccessToken;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -12,9 +14,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Sanctum tokens tárolása a web (mysql) adatbázisban,
+        // akkor is ha a tokenable model (Account) más connection-t használ
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+        // Metin2 session-alapú auth provider (Filament admin fallback)
         Auth::provider('metin2', function ($app, array $config) {
             return new Metin2UserProvider(
-                connection: $config['connection'] ?? 'metin2',
+                connection: $config['connection'] ?? 'account',
                 table: $config['table'] ?? 'account',
                 hashAlgo: $config['hash'] ?? 'md5',
             );

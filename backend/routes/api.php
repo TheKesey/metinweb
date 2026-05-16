@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/news', [NewsController::class, 'index']);
 Route::get('/news/{news}', [NewsController::class, 'show']);
 
-// Public auth routes
-Route::post('/auth/login', [AuthController::class, 'login']);
+// Auth
+Route::post('/auth/login',           [AuthController::class, 'login']);
+Route::post('/auth/register',        [AuthController::class, 'register']);
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 
 // Authenticated routes (Metin2 Sanctum guard)
 Route::middleware('auth:sanctum')->group(function () {

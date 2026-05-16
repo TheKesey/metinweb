@@ -9,6 +9,8 @@ import { useStore } from "@/lib/store";
 import { KeseyMark } from "@/components/brand/KeseyMark";
 import { SpinnerIcon, XIcon, LockIcon, UserIcon, MailIcon, CheckIcon, ArrowLeftIcon } from "@/components/brand/Icon";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 // ── Schemas ──────────────────────────────────────────────────────────────────
 const loginSchema = z.object({
   username: z.string().min(1),
@@ -68,46 +70,87 @@ export function AuthModal() {
     registerForm.reset();
   }
 
+  function storeAuth(token: string, user: { username: string; email: string; member_since: string }) {
+    localStorage.setItem("auth_token", token);
+    setUser({ id: user.username, username: user.username, email: user.email, coins: 0, vip_tier: 0, member_since: user.member_since });
+    close();
+  }
+
   async function handleLogin(data: LoginForm) {
-    setLoading(true); setError("");
-    await new Promise((r) => setTimeout(r, 800));
-    if (data.username === "test" && data.password === "test1234") {
-      setUser({ id: "1", username: "Vasszív", email: "vassziv@kesey.hu", coins: 3500, vip_tier: 1, member_since: "2021-04-02" });
-      close();
-    } else {
-      setError(t("auth_err_creds"));
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ login: data.username, password: data.password }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        const msg = json.errors?.login?.[0] || json.message || t("auth_err_creds");
+        setError(msg);
+        return;
+      }
+      storeAuth(json.token, json.user);
+    } catch {
+      setError(t("error"));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function handleRegister(data: RegisterForm) {
-    setLoading(true); setError("");
-    await new Promise((r) => setTimeout(r, 800));
-    setUser({ id: "2", username: data.username, email: data.email, coins: 0, vip_tier: 0, member_since: new Date().toISOString().slice(0, 10) });
-    close();
-    setLoading(false);
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ login: data.username, email: data.email, password: data.password }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        const msg = json.errors?.login?.[0] || json.errors?.email?.[0] || json.message || t("error");
+        setError(msg);
+        return;
+      }
+      storeAuth(json.token, json.user);
+    } catch {
+      setError(t("error"));
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
     if (!forgotEmail) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setForgotSent(true);
-    setLoading(false);
+    try {
+      await fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      setForgotSent(true);
+    } catch {
+      setForgotSent(true); // mindig mutassuk a success-t
+    } finally {
+      setLoading(false);
+    }
   }
 
   const pw = registerForm.watch("password") ?? "";
 
   const headingMap = {
-    login: t("auth_login_title"),
+    login:    t("auth_login_title"),
     register: t("auth_register_title"),
-    forgot: t("forgot_title"),
+    forgot:   t("forgot_title"),
   };
   const subMap = {
-    login: t("auth_login_sub"),
+    login:    t("auth_login_sub"),
     register: t("auth_register_sub"),
-    forgot: t("forgot_sub"),
+    forgot:   t("forgot_sub"),
   };
 
   return (
@@ -122,12 +165,10 @@ export function AuthModal() {
           boxShadow: "0 32px 80px -16px rgba(0,0,0,0.8)",
         }}
       >
-        {/* Close */}
         <button onClick={close} style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 8, background: "var(--bg-3)", border: "1px solid var(--line-2)", color: "var(--fg-muted)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <XIcon size={14} />
         </button>
 
-        {/* Logo + heading */}
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <KeseyMark size={44} />
           <h2 style={{ marginTop: 12, fontSize: 22, color: "#ecead8" }}>
@@ -138,7 +179,7 @@ export function AuthModal() {
           </p>
         </div>
 
-        {/* Login form */}
+        {/* Login */}
         {authModal === "login" && (
           <form onSubmit={loginForm.handleSubmit(handleLogin)} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
@@ -172,7 +213,7 @@ export function AuthModal() {
           </form>
         )}
 
-        {/* Register form */}
+        {/* Register */}
         {authModal === "register" && (
           <form onSubmit={registerForm.handleSubmit(handleRegister)} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div>
@@ -215,7 +256,7 @@ export function AuthModal() {
           </form>
         )}
 
-        {/* Forgot password form */}
+        {/* Forgot */}
         {authModal === "forgot" && !forgotSent && (
           <form onSubmit={handleForgot} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
@@ -242,7 +283,7 @@ export function AuthModal() {
           </form>
         )}
 
-        {/* Forgot — success state */}
+        {/* Forgot success */}
         {authModal === "forgot" && forgotSent && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, paddingTop: 8 }}>
             <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
