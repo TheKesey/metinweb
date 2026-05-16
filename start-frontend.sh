@@ -1,5 +1,7 @@
 #!/bin/sh
 # Kesey — Frontend indító szkript (FreeBSD + Next.js + PM2)
+# Build a fejlesztői gépen történik (SWC FreeBSD-n nem támogatott),
+# ide csak a kész .next mappa kerül feltöltésre.
 
 FRONTEND_DIR="/var/www/metinweb/frontend"
 APP_NAME="kesey-frontend"
@@ -15,14 +17,14 @@ fail() { printf "${RED}[ERR]${NC} %s\n" "$1"; exit 1; }
 
 cd "$FRONTEND_DIR" || fail "Frontend mappa nem található: $FRONTEND_DIR"
 
-# Függőségek
-warn "npm install..."
-npm install --silent && log "Függőségek telepítve"
+# .next mappa ellenőrzés
+if [ ! -d ".next" ]; then
+  fail ".next mappa hiányzik — előbb build-eld a fejlesztői gépen és töltsd fel (scp -r .next ...)"
+fi
 
-# Build
-warn "Next.js build (ez eltarthat 1-2 percig)..."
-npm run build || fail "Build sikertelen"
-log "Build kész"
+# Csak prod dependencies
+warn "npm install (prod only)..."
+npm install --omit=dev --silent && log "Függőségek telepítve"
 
 # PM2
 if pm2 describe "$APP_NAME" > /dev/null 2>&1; then

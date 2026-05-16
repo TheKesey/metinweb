@@ -207,15 +207,31 @@ sudo chmod -R 775 /var/www/metinweb/backend/bootstrap/cache
 
 ## 6. Frontend (Next.js) beállítása
 
-```bash
-cd /var/www/metinweb/frontend
-npm install
+> **Fontos:** A `@swc/core`-nak nincs FreeBSD bináris csomagja, ezért a build
+> a fejlesztői gépen (Windows/Linux/Mac) történik. A szerver csak a kész outputot futtatja.
+
+**Fejlesztői gépen (Windows):**
+```powershell
+cd "d:\Metin2 projekt\metinweb\frontend"
 npm run build
 ```
 
-**`.env.local` létrehozása:**
+**`.env.local` létrehozása a fejlesztői gépen build előtt:**
 ```env
 NEXT_PUBLIC_API_URL=http://SZERVER_IP:8000
+```
+
+**Feltöltés a szerverre:**
+```powershell
+scp -r .next root@SZERVER_IP:/var/www/metinweb/frontend/
+scp -r public root@SZERVER_IP:/var/www/metinweb/frontend/
+scp package.json root@SZERVER_IP:/var/www/metinweb/frontend/
+```
+
+**Szerveren — csak prod dependencies és indítás:**
+```bash
+cd /var/www/metinweb/frontend
+npm install --omit=dev
 ```
 
 ## 7. Apache konfig
@@ -256,7 +272,7 @@ pass in proto tcp to port { 22, 3000, 8000 }
 sudo pfctl -f /etc/pf.conf
 ```
 
-## 9. PM2 automatikus indítás reboot után
+## 9. PM2 indítás és automatikus újraindítás reboot után
 
 ```bash
 pm2 start npm --name "kesey-frontend" -- start
@@ -281,10 +297,11 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Frontend
-cd ../frontend
-npm install
-npm run build
+# Frontend — build a fejlesztői gépen, majd feltöltés
+# (Windows fejlesztői gépen):
+#   npm run build
+#   scp -r .next public package.json root@SZERVER_IP:/var/www/metinweb/frontend/
+# Szerveren:
 pm2 restart kesey-frontend
 ```
 
