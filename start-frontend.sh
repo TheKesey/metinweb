@@ -24,15 +24,6 @@ warn "Next.js build (ez eltarthat 1-2 percig)..."
 npm run build || fail "Build sikertelen"
 log "Build kész"
 
-# Apache ellenőrzés (proxy miatt kell)
-if service apache24 status > /dev/null 2>&1; then
-  log "Apache fut"
-else
-  warn "Apache leállva — indítás..."
-  service apache24 start || fail "Apache nem indult el"
-  log "Apache elindult"
-fi
-
 # PM2
 if pm2 describe "$APP_NAME" > /dev/null 2>&1; then
   warn "PM2 process már fut — újraindítás..."
@@ -44,5 +35,5 @@ else
 fi
 
 IP=$(hostname -I 2>/dev/null | awk '{print $1}')
-printf "\n${GREEN}Frontend kész.${NC} Elérhető: http://${IP}:80\n"
+printf "\n${GREEN}Frontend kész.${NC} Elérhető: http://${IP}:3000\n"
 printf "PM2 logok: pm2 logs ${APP_NAME}\n"

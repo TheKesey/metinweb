@@ -43,4 +43,4 @@ chown -R www:www "$BACKEND_DIR/storage" "$BACKEND_DIR/bootstrap/cache"
 chmod -R 775 "$BACKEND_DIR/storage" "$BACKEND_DIR/bootstrap/cache"
 log "Jogosultságok beállítva"
 
-printf "\n${GREEN}Backend kész.${NC} Elérhető: http://\$(hostname -I | awk '{print \$1}'):8080\n"
+printf "\n${GREEN}Backend kész.${NC} Elérhető: http://\$(hostname -I | awk '{print \$1}'):8000\n"

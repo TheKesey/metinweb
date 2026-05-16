@@ -14,8 +14,8 @@
 
 | Szolgáltatás | Port |
 |---|---|
-| Frontend (Next.js) | `http://IP:80` |
-| Backend (Laravel API) | `http://IP:8080` |
+| Frontend (Next.js) | `http://IP:3000` |
+| Backend (Laravel API) | `http://IP:8000` |
 
 ---
 
@@ -72,7 +72,7 @@ cp .env.example .env
 ```env
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=http://SZERVER_IP:8080
+APP_URL=http://SZERVER_IP:8000
 
 DB_DATABASE=kesey_db
 DB_USERNAME=kesey
@@ -105,7 +105,7 @@ npm run build
 
 **`.env.local` létrehozása:**
 ```env
-NEXT_PUBLIC_API_URL=http://SZERVER_IP:8080
+NEXT_PUBLIC_API_URL=http://SZERVER_IP:8000
 ```
 
 ## 7. Apache konfig
@@ -114,9 +114,9 @@ Apache FreeBSD-n: `/usr/local/etc/apache24/`
 
 **Backend** — `/usr/local/etc/apache24/Includes/kesey-backend.conf`:
 ```apache
-Listen 8080
+Listen 8000
 
-<VirtualHost *:8080>
+<VirtualHost *:8000>
     DocumentRoot /var/www/kesey/backend/public
 
     <Directory /var/www/kesey/backend/public>
@@ -129,30 +129,18 @@ Listen 8080
 </VirtualHost>
 ```
 
-**Frontend** — `/usr/local/etc/apache24/Includes/kesey-frontend.conf`:
-```apache
-LoadModule proxy_module libexec/apache24/mod_proxy.so
-LoadModule proxy_http_module libexec/apache24/mod_proxy_http.so
-
-<VirtualHost *:80>
-    ProxyPreserveHost On
-    ProxyPass / http://localhost:3000/
-    ProxyPassReverse / http://localhost:3000/
-
-    ErrorLog /var/log/kesey-frontend-error.log
-    CustomLog /var/log/kesey-frontend-access.log combined
-</VirtualHost>
-```
-
+**Backend** konfig után indítsd újra Apache-ot:
 ```bash
 sudo service apache24 start
 ```
+
+> A frontend Next.js közvetlenül a 3000-es porton fut PM2 alatt — Apache proxy nem kell hozzá.
 
 ## 8. Tűzfal (pf)
 
 Ha `pf` fut (`/etc/pf.conf`):
 ```
-pass in proto tcp to port { 22, 80, 8080 }
+pass in proto tcp to port { 22, 3000, 8000 }
 ```
 ```bash
 sudo pfctl -f /etc/pf.conf
