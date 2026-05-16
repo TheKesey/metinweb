@@ -42,13 +42,13 @@ composer --version   # ellenőrzés
 
 ```bash
 sudo sysrc apache24_enable="YES"
-sudo sysrc mysql_enable="YES"   # MariaDB is a mysql-compatible service
+sudo sysrc mysql_server_enable="YES"
 ```
 
 ## 3. MariaDB beállítása
 
 ```bash
-sudo service mysql start
+sudo service mysql-server start
 sudo mysql_secure_installation
 sudo mysql -u root -p
 ```

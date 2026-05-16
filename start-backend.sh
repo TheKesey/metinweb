@@ -12,12 +12,12 @@ log()  { printf "${GREEN}[OK]${NC} %s\n" "$1"; }
 warn() { printf "${YELLOW}[!!]${NC} %s\n" "$1"; }
 fail() { printf "${RED}[ERR]${NC} %s\n" "$1"; exit 1; }
 
-# MariaDB (FreeBSD-n mysql névvel fut)
-if service mysql status > /dev/null 2>&1; then
+# MariaDB
+if service mysql-server status > /dev/null 2>&1; then
   log "MariaDB fut"
 else
   warn "MariaDB leállva — indítás..."
-  service mysql start || fail "MariaDB nem indult el"
+  service mysql-server start || fail "MariaDB nem indult el"
   log "MariaDB elindult"
 fi
 
