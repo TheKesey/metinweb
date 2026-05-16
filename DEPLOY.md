@@ -217,6 +217,15 @@ Emellett add hozzá manuálisan:
 BROADCAST_CONNECTION=reverb
 ```
 
+**TipTap szövegszerkesztő telepítése:**
+```bash
+composer require awcodes/filament-tiptap-editor
+php artisan filament:assets
+php artisan vendor:publish --tag=filament-tiptap-editor-translations
+```
+
+> A magyar fordítás (`lang/vendor/filament-tiptap-editor/hu/`) már szerepel a repoban, nem kell kézzel létrehozni.
+
 **Filament magyar fordítások publikálása:**
 ```bash
 php artisan vendor:publish --tag=filament-panels-translations
