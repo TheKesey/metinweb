@@ -307,6 +307,118 @@ pm2 restart kesey-frontend
 
 ---
 
+## Domain alapú production setup
+
+Ha van domain, a port-alapú hozzáférés helyett subdomaineket használj:
+
+| Subdomain | Szolgáltatás |
+|---|---|
+| `domain.hu` | Frontend (Next.js) |
+| `api.domain.hu` | Laravel API |
+| `admin.domain.hu` | Filament admin panel |
+
+### 1. Apache konfig lecserélése
+
+Töröld a régi port-alapú konfigt és hozz létre újakat:
+
+```bash
+rm /usr/local/etc/apache24/Includes/kesey-backend.conf
+```
+
+**`/usr/local/etc/apache24/Includes/kesey-api.conf`** (Laravel API):
+```apache
+<VirtualHost *:80>
+    ServerName api.domain.hu
+    DocumentRoot /var/www/metinweb/backend/public
+
+    <Directory /var/www/metinweb/backend/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog /var/log/kesey-api-error.log
+    CustomLog /var/log/kesey-api-access.log combined
+</VirtualHost>
+```
+
+**`/usr/local/etc/apache24/Includes/kesey-admin.conf`** (Filament admin):
+```apache
+<VirtualHost *:80>
+    ServerName admin.domain.hu
+    DocumentRoot /var/www/metinweb/backend/public
+
+    <Directory /var/www/metinweb/backend/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog /var/log/kesey-admin-error.log
+    CustomLog /var/log/kesey-admin-access.log combined
+</VirtualHost>
+```
+
+**`/usr/local/etc/apache24/Includes/kesey-frontend.conf`** (Next.js proxy):
+```apache
+LoadModule proxy_module libexec/apache24/mod_proxy.so
+LoadModule proxy_http_module libexec/apache24/mod_proxy_http.so
+
+<VirtualHost *:80>
+    ServerName domain.hu
+    ProxyPreserveHost On
+    ProxyPass / http://localhost:3000/
+    ProxyPassReverse / http://localhost:3000/
+
+    ErrorLog /var/log/kesey-frontend-error.log
+    CustomLog /var/log/kesey-frontend-access.log combined
+</VirtualHost>
+```
+
+```bash
+service apache24 restart
+```
+
+### 2. HTTPS beállítása (Let's Encrypt)
+
+```bash
+pkg install -y py311-certbot py311-certbot-apache
+certbot --apache -d domain.hu -d api.domain.hu -d admin.domain.hu
+```
+
+A Certbot automatikusan átírja az Apache konfigokat HTTPS-re és beállít auto-megújítást.
+
+### 3. .env frissítése a backenden
+
+```env
+APP_URL=https://api.domain.hu
+FRONTEND_URL=https://domain.hu
+```
+
+```bash
+php artisan config:cache
+```
+
+### 4. Frontend .env.local frissítése (fejlesztői gépen)
+
+```env
+NEXT_PUBLIC_API_URL=https://api.domain.hu
+```
+
+Majd újra build + feltöltés.
+
+### 5. Tűzfal frissítése
+
+Domain esetén csak 80 és 443 kell, a portok bezárhatók:
+
+```
+pass in proto tcp to port { 22, 80, 443 }
+```
+
+```bash
+pfctl -f /etc/pf.conf
+```
+
+---
+
 ## Szkriptek
 
 | Fájl | Leírás |
