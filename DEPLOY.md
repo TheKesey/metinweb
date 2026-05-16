@@ -25,8 +25,17 @@
 sudo pkg update
 sudo pkg install -y apache24 mod_php83 php83 php83-pdo_mysql \
   php83-mbstring php83-xml php83-curl php83-zip php83-bcmath \
-  php83-intl php83-filter mariadb118-server node npm git composer
+  php83-intl php83-filter php83-fileinfo php83-bcmath php83-curl php83-pdo_mysql \
+  mariadb118-server node npm git
 sudo npm install -g pm2
+```
+
+**Composer manuális telepítése** (FreeBSD pkg-ban nincs):
+```bash
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+chmod +x /usr/local/bin/composer
+composer --version   # ellenőrzés
 ```
 
 ## 2. Service-ek engedélyezése
@@ -44,10 +53,25 @@ sudo mysql_secure_installation
 sudo mysql -u root -p
 ```
 
+A Metin2 szerver adatbázisai (`account`, `common`, `log`, `player`) már léteznek.
+Csak a Laravel web adatbázisát kell létrehozni, és a usernek olvasási jogot adni a game DB-kre:
+
 ```sql
-CREATE DATABASE kesey_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'kesey'@'localhost' IDENTIFIED BY 'eros_jelszo';
-GRANT ALL PRIVILEGES ON kesey_db.* TO 'kesey'@'localhost';
+-- Web adatbázis (Laravel)
+CREATE DATABASE web CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Laravel user
+CREATE USER 'laravel'@'localhost' IDENTIFIED BY 'eros_jelszo';
+
+-- Teljes jog a web DB-re
+GRANT ALL PRIVILEGES ON web.* TO 'laravel'@'localhost';
+
+-- Olvasási jog a game DB-kre (ranking, online players, stb.)
+GRANT SELECT ON account.* TO 'laravel'@'localhost';
+GRANT SELECT ON common.*  TO 'laravel'@'localhost';
+GRANT SELECT ON log.*     TO 'laravel'@'localhost';
+GRANT SELECT ON player.*  TO 'laravel'@'localhost';
+
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -74,9 +98,95 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=http://SZERVER_IP:8000
 
-DB_DATABASE=kesey_db
-DB_USERNAME=kesey
+# Laravel saját adatbázisa
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=web
+DB_USERNAME=laravel
 DB_PASSWORD=eros_jelszo
+
+# Metin2 game adatbázisok
+DB_ACCOUNT_DATABASE=account
+DB_COMMON_DATABASE=common
+DB_LOG_DATABASE=log
+DB_PLAYER_DATABASE=player
+```
+
+**`config/database.php`** — több connection hozzáadása:
+```php
+'connections' => [
+
+    'mysql' => [                          // Laravel saját DB-je (web)
+        'driver'   => 'mysql',
+        'host'     => env('DB_HOST', '127.0.0.1'),
+        'port'     => env('DB_PORT', '3306'),
+        'database' => env('DB_DATABASE', 'web'),
+        'username' => env('DB_USERNAME', 'laravel'),
+        'password' => env('DB_PASSWORD', ''),
+        'charset'  => 'utf8mb4',
+        'collation'=> 'utf8mb4_unicode_ci',
+    ],
+
+    'account' => [
+        'driver'   => 'mysql',
+        'host'     => env('DB_HOST', '127.0.0.1'),
+        'port'     => env('DB_PORT', '3306'),
+        'database' => env('DB_ACCOUNT_DATABASE', 'account'),
+        'username' => env('DB_USERNAME', 'laravel'),
+        'password' => env('DB_PASSWORD', ''),
+        'charset'  => 'utf8mb4',
+        'collation'=> 'utf8mb4_unicode_ci',
+    ],
+
+    'common' => [
+        'driver'   => 'mysql',
+        'host'     => env('DB_HOST', '127.0.0.1'),
+        'port'     => env('DB_PORT', '3306'),
+        'database' => env('DB_COMMON_DATABASE', 'common'),
+        'username' => env('DB_USERNAME', 'laravel'),
+        'password' => env('DB_PASSWORD', ''),
+        'charset'  => 'utf8mb4',
+        'collation'=> 'utf8mb4_unicode_ci',
+    ],
+
+    'log' => [
+        'driver'   => 'mysql',
+        'host'     => env('DB_HOST', '127.0.0.1'),
+        'port'     => env('DB_PORT', '3306'),
+        'database' => env('DB_LOG_DATABASE', 'log'),
+        'username' => env('DB_USERNAME', 'laravel'),
+        'password' => env('DB_PASSWORD', ''),
+        'charset'  => 'utf8mb4',
+        'collation'=> 'utf8mb4_unicode_ci',
+    ],
+
+    'player' => [
+        'driver'   => 'mysql',
+        'host'     => env('DB_HOST', '127.0.0.1'),
+        'port'     => env('DB_PORT', '3306'),
+        'database' => env('DB_PLAYER_DATABASE', 'player'),
+        'username' => env('DB_USERNAME', 'laravel'),
+        'password' => env('DB_PASSWORD', ''),
+        'charset'  => 'utf8mb4',
+        'collation'=> 'utf8mb4_unicode_ci',
+    ],
+
+],
+```
+
+Modelleknél a connection megadása:
+```php
+// Pl. ranking lekérdezéshez
+class Player extends Model {
+    protected $connection = 'player';
+    protected $table = 'player';
+}
+
+class Account extends Model {
+    protected $connection = 'account';
+    protected $table = 'account';
+}
 ```
 
 ```bash

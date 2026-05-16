@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'mysql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -32,18 +32,57 @@ return [
 
     'connections' => [
 
-        // Metin2 game server database (read-only for auth)
-        'metin2' => [
-            'driver' => 'mysql',
-            'host' => env('METIN2_DB_HOST', '127.0.0.1'),
-            'port' => env('METIN2_DB_PORT', '3306'),
-            'database' => env('METIN2_DB_DATABASE', 'metin2_account'),
-            'username' => env('METIN2_DB_USERNAME', 'root'),
-            'password' => env('METIN2_DB_PASSWORD', ''),
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => '',
-            'strict' => false,
+        // Metin2 game adatbázisok (csak olvasás)
+        'account' => [
+            'driver'    => 'mysql',
+            'host'      => env('DB_HOST', '127.0.0.1'),
+            'port'      => env('DB_PORT', '3306'),
+            'database'  => env('DB_ACCOUNT_DATABASE', 'account'),
+            'username'  => env('DB_USERNAME', 'laravel'),
+            'password'  => env('DB_PASSWORD', ''),
+            'charset'   => 'utf8',
+            'collation' => 'utf8_general_ci',
+            'prefix'    => '',
+            'strict'    => false,
+        ],
+
+        'common' => [
+            'driver'    => 'mysql',
+            'host'      => env('DB_HOST', '127.0.0.1'),
+            'port'      => env('DB_PORT', '3306'),
+            'database'  => env('DB_COMMON_DATABASE', 'common'),
+            'username'  => env('DB_USERNAME', 'laravel'),
+            'password'  => env('DB_PASSWORD', ''),
+            'charset'   => 'utf8',
+            'collation' => 'utf8_general_ci',
+            'prefix'    => '',
+            'strict'    => false,
+        ],
+
+        'log' => [
+            'driver'    => 'mysql',
+            'host'      => env('DB_HOST', '127.0.0.1'),
+            'port'      => env('DB_PORT', '3306'),
+            'database'  => env('DB_LOG_DATABASE', 'log'),
+            'username'  => env('DB_USERNAME', 'laravel'),
+            'password'  => env('DB_PASSWORD', ''),
+            'charset'   => 'utf8',
+            'collation' => 'utf8_general_ci',
+            'prefix'    => '',
+            'strict'    => false,
+        ],
+
+        'player' => [
+            'driver'    => 'mysql',
+            'host'      => env('DB_HOST', '127.0.0.1'),
+            'port'      => env('DB_PORT', '3306'),
+            'database'  => env('DB_PLAYER_DATABASE', 'player'),
+            'username'  => env('DB_USERNAME', 'laravel'),
+            'password'  => env('DB_PASSWORD', ''),
+            'charset'   => 'utf8',
+            'collation' => 'utf8_general_ci',
+            'prefix'    => '',
+            'strict'    => false,
         ],
 
         'sqlite' => [
