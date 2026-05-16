@@ -157,7 +157,7 @@ class NewsResource extends Resource
 
     private static function buildLanguageTabs(): array
     {
-        $toolbar = ['bold', 'italic', 'underline', 'strike', 'h2', 'h3', 'bulletList', 'orderedList', 'blockquote', 'codeBlock', 'link', 'undo', 'redo'];
+        $toolbar = ['bold', 'italic', 'underline', 'strike', 'h2', 'h3', 'bulletList', 'orderedList', 'blockquote', 'codeBlock', 'link', 'attachFiles', 'undo', 'redo'];
 
         try {
             $languages = Language::active();
@@ -169,7 +169,7 @@ class NewsResource extends Resource
             return [
                 Forms\Components\Tabs\Tab::make('🇭🇺 Magyar (kötelező)')
                     ->schema([
-                        Forms\Components\RichEditor::make('content')->label('Tartalom')->required()->toolbarButtons($toolbar),
+                        Forms\Components\RichEditor::make('content')->label('Tartalom')->required()->toolbarButtons($toolbar)->fileAttachmentsDisk('public')->fileAttachmentsDirectory('news-content'),
                     ]),
             ];
         }
@@ -193,7 +193,9 @@ class NewsResource extends Resource
                         Forms\Components\RichEditor::make('content')
                             ->label('Tartalom')
                             ->required()
-                            ->toolbarButtons($toolbar),
+                            ->toolbarButtons($toolbar)
+                            ->fileAttachmentsDisk('public')
+                            ->fileAttachmentsDirectory('news-content'),
                     ]);
             }
 
@@ -204,7 +206,9 @@ class NewsResource extends Resource
                         ->maxLength(255),
                     Forms\Components\RichEditor::make("content_{$lang->code}")
                         ->label('Tartalom')
-                        ->toolbarButtons($toolbar),
+                        ->toolbarButtons($toolbar)
+                        ->fileAttachmentsDisk('public')
+                        ->fileAttachmentsDirectory('news-content'),
                 ]);
         })->toArray();
     }
