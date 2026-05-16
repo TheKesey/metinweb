@@ -4,10 +4,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowRightIcon } from "@/components/brand/Icon";
+import { getEcho } from "@/lib/echo";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const PER_PAGE = 12;
-const POLL_MS  = 30_000;
 
 type NewsType = "news" | "patch" | "event";
 
@@ -248,21 +248,22 @@ export default function NewsPage() {
     loadInitial(filter);
   }, [filter, locale, loadInitial]);
 
-  // ── poll for new items ────────────────────────────────────────────────────
+  // ── WebSocket: listen for new published news ──────────────────────────────
   useEffect(() => {
-    const poll = async () => {
-      if (newestId.current === null) return;
+    const echo = getEcho();
+    echo.channel("news").listen(".published", async (e: { id: number }) => {
+      if (newestId.current !== null && e.id <= newestId.current) return;
       try {
+        const after = newestId.current ?? (e.id - 1);
         const res  = await fetch(
-          `${API_URL}/api/news?after_id=${newestId.current}&locale=${localeRef.current}${buildTypeParam(activeFilter.current)}`
+          `${API_URL}/api/news?after_id=${after}&locale=${localeRef.current}${buildTypeParam(activeFilter.current)}`
         );
         const json = await res.json();
         const data: NewsItem[] = json.data ?? [];
         if (data.length > 0) setPendingNew(data);
       } catch {}
-    };
-    const id = setInterval(poll, POLL_MS);
-    return () => clearInterval(id);
+    });
+    return () => { echo.leaveChannel("news"); };
   }, []);
 
   // ── prepend pending new items ─────────────────────────────────────────────

@@ -16,6 +16,7 @@
 |---|---|
 | Frontend (Next.js) | `http://IP:3000` |
 | Backend (Laravel API) | `http://IP:8000` |
+| Reverb (WebSocket) | `ws://IP:8080` |
 
 ---
 
@@ -195,6 +196,27 @@ php artisan migrate --force
 php artisan storage:link
 ```
 
+**Reverb (WebSocket szerver) telepítése:**
+```bash
+composer require laravel/reverb
+php artisan reverb:install
+```
+
+A `reverb:install` automatikusan hozzáadja a `.env`-be:
+```env
+REVERB_APP_ID=generalt-id
+REVERB_APP_KEY=generalt-key
+REVERB_APP_SECRET=generalt-secret
+REVERB_HOST=0.0.0.0
+REVERB_PORT=8080
+REVERB_SCHEME=http
+```
+
+Emellett add hozzá manuálisan:
+```env
+BROADCAST_CONNECTION=reverb
+```
+
 **Filament magyar fordítások publikálása:**
 ```bash
 php artisan vendor:publish --tag=filament-panels-translations
@@ -233,6 +255,12 @@ npm run build
 **`.env.local` létrehozása a fejlesztői gépen build előtt:**
 ```env
 NEXT_PUBLIC_API_URL=http://SZERVER_IP:8000
+
+# Reverb WebSocket — ugyanaz a kulcs mint a backend REVERB_APP_KEY
+NEXT_PUBLIC_REVERB_APP_KEY=generalt-key
+NEXT_PUBLIC_REVERB_HOST=SZERVER_IP
+NEXT_PUBLIC_REVERB_PORT=8080
+NEXT_PUBLIC_REVERB_SCHEME=http
 ```
 
 **Feltöltés a szerverre:**
@@ -280,7 +308,7 @@ sudo service apache24 start
 
 Ha `pf` fut (`/etc/pf.conf`):
 ```
-pass in proto tcp to port { 22, 3000, 8000 }
+pass in proto tcp to port { 22, 3000, 8000, 8080 }
 ```
 ```bash
 sudo pfctl -f /etc/pf.conf
@@ -289,7 +317,12 @@ sudo pfctl -f /etc/pf.conf
 ## 9. PM2 indítás és automatikus újraindítás reboot után
 
 ```bash
+# Frontend (Next.js)
 pm2 start npm --name "kesey-frontend" -- start
+
+# Reverb WebSocket szerver
+pm2 start --name "kesey-reverb" -- php /var/www/metinweb/backend/artisan reverb:start --host=0.0.0.0 --port=8080
+
 pm2 save
 pm2 startup
 # A kiírt parancsot másold be és futtasd le
@@ -310,6 +343,7 @@ php artisan migrate --force
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+pm2 restart kesey-reverb
 
 # Frontend — build a fejlesztői gépen, majd feltöltés
 # (Windows fejlesztői gépen):
@@ -330,6 +364,7 @@ Ha van domain, a port-alapú hozzáférés helyett subdomaineket használj:
 | `domain.hu` | Frontend (Next.js) |
 | `api.domain.hu` | Laravel API |
 | `admin.domain.hu` | Filament admin panel |
+| `ws.domain.hu` | Reverb WebSocket |
 
 ### 1. Apache konfig lecserélése
 
@@ -387,6 +422,22 @@ LoadModule proxy_http_module libexec/apache24/mod_proxy_http.so
 </VirtualHost>
 ```
 
+**`/usr/local/etc/apache24/Includes/kesey-reverb.conf`** (Reverb WebSocket proxy):
+```apache
+LoadModule proxy_module libexec/apache24/mod_proxy.so
+LoadModule proxy_wstunnel_module libexec/apache24/mod_proxy_wstunnel.so
+
+<VirtualHost *:80>
+    ServerName ws.domain.hu
+    ProxyPreserveHost On
+    ProxyPass / ws://localhost:8080/
+    ProxyPassReverse / ws://localhost:8080/
+
+    ErrorLog /var/log/kesey-reverb-error.log
+    CustomLog /var/log/kesey-reverb-access.log combined
+</VirtualHost>
+```
+
 ```bash
 service apache24 restart
 ```
@@ -395,7 +446,7 @@ service apache24 restart
 
 ```bash
 pkg install -y py311-certbot py311-certbot-apache
-certbot --apache -d domain.hu -d api.domain.hu -d admin.domain.hu
+certbot --apache -d domain.hu -d api.domain.hu -d admin.domain.hu -d ws.domain.hu
 ```
 
 A Certbot automatikusan átírja az Apache konfigokat HTTPS-re és beállít auto-megújítást.
@@ -415,13 +466,17 @@ php artisan config:cache
 
 ```env
 NEXT_PUBLIC_API_URL=https://api.domain.hu
+NEXT_PUBLIC_REVERB_APP_KEY=generalt-key
+NEXT_PUBLIC_REVERB_HOST=ws.domain.hu
+NEXT_PUBLIC_REVERB_PORT=443
+NEXT_PUBLIC_REVERB_SCHEME=https
 ```
 
 Majd újra build + feltöltés.
 
 ### 5. Tűzfal frissítése
 
-Domain esetén csak 80 és 443 kell, a portok bezárhatók:
+Domain esetén csak 80 és 443 kell (a 8080-as Reverb Apache proxyn át megy, nem kell külön nyitni):
 
 ```
 pass in proto tcp to port { 22, 80, 443 }
