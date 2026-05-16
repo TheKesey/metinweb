@@ -100,10 +100,9 @@
 
   "news_title": "Hírek",
   "news_sub": "Frissítések, eseménynapló, dev blog",
-  "tag_update": "Frissítés",
-  "tag_event": "Esemény",
-  "tag_devblog": "Dev blog",
+  "tag_news": "Hír",
   "tag_patch": "Patch",
+  "tag_event": "Esemény",
   "read_more": "Tovább",
   "back_to_news": "Vissza a hírekhez",
   "posted_by": "Írta",

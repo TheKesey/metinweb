@@ -1,7 +1,12 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\NewsController;
 use Illuminate\Support\Facades\Route;
+
+// Hírek
+Route::get('/news', [NewsController::class, 'index']);
+Route::get('/news/{news}', [NewsController::class, 'show']);
 
 // Public auth routes
 Route::post('/auth/login', [AuthController::class, 'login']);

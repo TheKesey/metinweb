@@ -100,10 +100,9 @@
 
   "news_title": "News",
   "news_sub": "Updates, event log, dev blog",
-  "tag_update": "Update",
-  "tag_event": "Event",
-  "tag_devblog": "Dev blog",
+  "tag_news": "News",
   "tag_patch": "Patch",
+  "tag_event": "Event",
   "read_more": "Read more",
   "back_to_news": "Back to news",
   "posted_by": "By",
