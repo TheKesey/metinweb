@@ -59,7 +59,7 @@ class NewsResource extends Resource
                         ->live()
                         ->afterStateUpdated(function ($state, Forms\Set $set) {
                             if ($state === 'published') {
-                                $set('published_at', now()->toDateTimeString());
+                                $set('published_at', now()->format('Y-m-d H:i'));
                             }
                         }),
                     Forms\Components\DateTimePicker::make('published_at')
