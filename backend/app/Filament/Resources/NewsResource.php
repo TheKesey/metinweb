@@ -166,7 +166,7 @@ class NewsResource extends Resource
             '|',
             'bullet-list', 'ordered-list', 'blockquote', 'code-block',
             '|',
-            'link', 'media', 'grid-builder',
+            'link', 'media', 'oembed', 'grid-builder', 'table',
             '|',
             'undo', 'redo',
         ];
