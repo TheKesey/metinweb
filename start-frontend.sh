@@ -36,6 +36,6 @@ else
   pm2 save && log "PM2 állapot mentve"
 fi
 
-IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+IP=$(ifconfig | awk '/inet / && !/127\.0\.0\.1/ {print $2; exit}')
 printf "\n${GREEN}Frontend kész.${NC} Elérhető: http://${IP}:3000\n"
 printf "PM2 logok: pm2 logs ${APP_NAME}\n"
