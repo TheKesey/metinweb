@@ -79,15 +79,15 @@ EXIT;
 ## 4. Projekt feltöltése
 
 ```bash
-sudo mkdir -p /var/www/kesey
-sudo chown $USER:$USER /var/www/kesey
-git clone https://github.com/te/repo.git /var/www/kesey
+sudo mkdir -p /var/www/metinweb
+sudo chown $USER:$USER /var/www/metinweb
+git clone https://github.com/te/repo.git /var/www/metinweb
 ```
 
 ## 5. Backend (Laravel) beállítása
 
 ```bash
-cd /var/www/kesey/backend
+cd /var/www/metinweb/backend
 composer install --no-dev --optimize-autoloader
 cp .env.example .env
 ```
@@ -200,15 +200,15 @@ php artisan view:cache
 
 **Jogosultságok:**
 ```bash
-sudo chown -R www:www /var/www/kesey/backend
-sudo chmod -R 775 /var/www/kesey/backend/storage
-sudo chmod -R 775 /var/www/kesey/backend/bootstrap/cache
+sudo chown -R www:www /var/www/metinweb/backend
+sudo chmod -R 775 /var/www/metinweb/backend/storage
+sudo chmod -R 775 /var/www/metinweb/backend/bootstrap/cache
 ```
 
 ## 6. Frontend (Next.js) beállítása
 
 ```bash
-cd /var/www/kesey/frontend
+cd /var/www/metinweb/frontend
 npm install
 npm run build
 ```
@@ -227,9 +227,9 @@ Apache FreeBSD-n: `/usr/local/etc/apache24/`
 Listen 8000
 
 <VirtualHost *:8000>
-    DocumentRoot /var/www/kesey/backend/public
+    DocumentRoot /var/www/metinweb/backend/public
 
-    <Directory /var/www/kesey/backend/public>
+    <Directory /var/www/metinweb/backend/public>
         AllowOverride All
         Require all granted
     </Directory>
@@ -270,7 +270,7 @@ pm2 startup
 ## Frissítés (deploy)
 
 ```bash
-cd /var/www/kesey
+cd /var/www/metinweb
 git pull
 
 # Backend
@@ -297,7 +297,7 @@ pm2 restart kesey-frontend
 | `start-backend.sh` | MySQL + Apache indítása, Laravel cache rebuild |
 | `start-frontend.sh` | Next.js build + PM2 indítás/újraindítás |
 
-A szkripteket másold a szerverre (pl. `/root/` vagy `/var/www/kesey/`), majd:
+A szkripteket másold a szerverre (pl. `/root/` vagy `/var/www/metinweb/`), majd:
 ```bash
 chmod +x start-backend.sh start-frontend.sh
 ```

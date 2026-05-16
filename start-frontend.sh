@@ -1,7 +1,7 @@
 #!/bin/sh
 # Kesey — Frontend indító szkript (FreeBSD + Next.js + PM2)
 
-FRONTEND_DIR="/var/www/kesey/frontend"
+FRONTEND_DIR="/var/www/metinweb/frontend"
 APP_NAME="kesey-frontend"
 
 GREEN='\033[0;32m'
