@@ -316,7 +316,8 @@ a:hover { color: var(--accent-bright); }
 .tag-accent { color: var(--accent-bright);  border-color: rgba(34, 197, 224, 0.3);  background: rgba(34, 197, 224, 0.08); }
 .tag-red    { color: var(--red-bright);     border-color: rgba(192, 51, 74, 0.4);   background: rgba(192, 51, 74, 0.10); }
 .tag-ok     { color: var(--ok);             border-color: rgba(74, 222, 128, 0.3);  background: rgba(74, 222, 128, 0.08); }
-.tag-warn   { color: var(--warn);           border-color: rgba(245, 158, 11, 0.3);  background: rgba(245, 158, 11, 0.08); }
+.tag-warn    { color: var(--warn);           border-color: rgba(245, 158, 11, 0.3);  background: rgba(245, 158, 11, 0.08); }
+.tag-success { color: var(--ok);             border-color: rgba(74, 222, 128, 0.3);  background: rgba(74, 222, 128, 0.08); }
 
 /* ── Dot indicator ──────────────────────────────────────────────────────── */
 .dot {
@@ -430,8 +431,8 @@ a:hover { color: var(--accent-bright); }
   justify-content: center;
   color: var(--fg-faint);
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  font-size: 22px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   position: relative;
   overflow: hidden;

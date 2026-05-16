@@ -115,7 +115,7 @@ export default function NewsArticlePage({ params }: { params: Promise<{ id: stri
             />
           ) : (
             <div className="img-ph" style={{ height: 360, marginBottom: 36, borderRadius: 8 }}>
-              <span>{article.type.toUpperCase()} · HERO ART</span>
+              <span>{article.type.toUpperCase()}</span>
             </div>
           )}
 
