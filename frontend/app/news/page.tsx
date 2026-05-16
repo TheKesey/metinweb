@@ -40,6 +40,59 @@ function TypeBadge({ type }: { type: NewsType }) {
   return <span className={`tag ${TYPE_COLORS[type]}`}>{t(`tag_${type}` as "tag_news")}</span>;
 }
 
+const skeletonBase: React.CSSProperties = {
+  background: "linear-gradient(90deg, var(--bg-2) 25%, rgba(255,255,255,0.04) 50%, var(--bg-2) 75%)",
+  backgroundSize: "200% 100%",
+  animation: "sk-shimmer 1.4s ease infinite",
+  borderRadius: 4,
+};
+
+function Sk({ w, h, style }: { w?: number | string; h: number; style?: React.CSSProperties }) {
+  return <div style={{ ...skeletonBase, width: w ?? "100%", height: h, flexShrink: 0, ...style }} />;
+}
+
+function FeaturedSkeleton() {
+  return (
+    <div
+      className="surface corners"
+      style={{
+        marginBottom: 20, background: "var(--bg-2)", display: "grid",
+        gridTemplateColumns: "1.2fr 1fr", overflow: "hidden", minHeight: 280,
+      }}
+    >
+      <div style={{ background: "var(--bg-3)", minHeight: 280 }} />
+      <div style={{ padding: 36, display: "flex", flexDirection: "column", justifyContent: "center", gap: 14 }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Sk w={48} h={20} style={{ borderRadius: 999 }} />
+          <Sk w={70} h={14} style={{ alignSelf: "center" }} />
+        </div>
+        <Sk h={30} />
+        <Sk w="85%" h={30} />
+        <Sk w="60%" h={30} />
+        <Sk w={100} h={13} style={{ marginTop: 4 }} />
+        <Sk w={80} h={13} />
+      </div>
+    </div>
+  );
+}
+
+function CardSkeleton() {
+  return (
+    <div className="surface corners" style={{ background: "var(--bg-2)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ height: 140, background: "var(--bg-3)", flexShrink: 0 }} />
+      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <Sk w={48} h={18} style={{ borderRadius: 999 }} />
+          <Sk w={60} h={12} style={{ alignSelf: "center" }} />
+        </div>
+        <Sk h={15} />
+        <Sk w="75%" h={15} />
+        <Sk w="50%" h={12} style={{ marginTop: 4 }} />
+      </div>
+    </div>
+  );
+}
+
 function FeaturedCard({ item }: { item: NewsItem }) {
   const t = useTranslations();
   return (
@@ -282,9 +335,13 @@ export default function NewsPage() {
         )}
 
         {initialLoading && (
-          <div style={{ textAlign: "center", padding: "80px 0", color: "var(--fg-muted)" }}>
-            {t("loading")}
-          </div>
+          <>
+            <style>{`@keyframes sk-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
+            <FeaturedSkeleton />
+            <div className="grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+              {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+            </div>
+          </>
         )}
 
         {!initialLoading && items.length === 0 && (
@@ -294,10 +351,10 @@ export default function NewsPage() {
         )}
 
         {/* Featured */}
-        {featured && <FeaturedCard item={featured} />}
+        {!initialLoading && featured && <FeaturedCard item={featured} />}
 
         {/* Grid */}
-        {grid.length > 0 && (
+        {!initialLoading && grid.length > 0 && (
           <div className="grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
             {grid.map((item, i) => (
               <NewsCard key={item.id} item={item} index={i} />
