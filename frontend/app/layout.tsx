@@ -7,6 +7,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/shop/CartDrawer";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { NavigationProgress } from "@/components/layout/NavigationProgress";
+import { Prefetcher } from "@/components/layout/Prefetcher";
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
@@ -46,6 +48,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <body suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <NavigationProgress />
+          <Prefetcher />
           <Header />
           <main style={{ position: "relative", zIndex: 2, minHeight: "calc(100dvh - var(--header-h))" }}>
             {children}

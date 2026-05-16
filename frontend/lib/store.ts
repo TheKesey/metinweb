@@ -26,7 +26,7 @@ interface Store {
   // UI
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (v: boolean) => void;
-  authModal: null | "login" | "register";
+  authModal: null | "login" | "register" | "forgot";
   setAuthModal: (v: Store["authModal"]) => void;
 }
 

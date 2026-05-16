@@ -11,61 +11,87 @@ import type { Locale, CharClass, Realm } from "@/types";
 type Tab = "level" | "pvp" | "metin" | "boss" | "guild";
 
 // ── Podium ────────────────────────────────────────────────────────────────────
-function Podium({ top3, locale }: { top3: typeof players; locale: Locale }) {
+function PodiumCard({
+  p, rank, color, glow, scale,
+}: {
+  p: typeof players[0]; rank: string; color: string; glow: boolean; scale: "lg" | "md" | "sm";
+}) {
   const t = useTranslations();
-  const positions = [
-    { idx: 1, label: "II",  color: "#d4d4d4",    glow: false },
-    { idx: 0, label: "I",   color: "var(--accent-bright)", glow: true },
-    { idx: 2, label: "III", color: "#cd7f32",    glow: false },
-  ];
+  const ClassGlyph = CLASS_ICONS[p.class as CharClass];
+  const realm = REALM_COLORS[p.realm as Realm];
+  const isFirst = scale === "lg";
+  const avatarSize = scale === "lg" ? 72 : scale === "md" ? 56 : 48;
+  const rankFontSize = scale === "lg" ? 64 : scale === "md" ? 52 : 42;
+  const nameFontSize = scale === "lg" ? 20 : scale === "md" ? 16 : 14;
+  const statFontSize = scale === "lg" ? 26 : scale === "md" ? 20 : 17;
+  const pad = scale === "lg" ? 24 : scale === "md" ? 18 : 14;
 
   return (
-    <div className="podium-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginTop: 20 }}>
-      {positions.map((pos) => {
-        const p = top3[pos.idx];
-        if (!p) return <div key={pos.idx} />;
-        const ClassGlyph = CLASS_ICONS[p.class as CharClass];
-        const realm = REALM_COLORS[p.realm as Realm];
-        return (
-          <div key={pos.idx} className="surface corners fade-up" style={{
-            padding: 20, background: pos.idx === 0 ? "linear-gradient(180deg, rgba(34,197,224,0.10), var(--bg-2))" : "var(--bg-2)",
-            borderColor: pos.idx === 0 ? "rgba(34,197,224,0.35)" : "var(--line-2)",
-            textAlign: "center", animationDelay: `${pos.idx * 80}ms`,
-          }}>
-            <div className="display" style={{ fontSize: 60, lineHeight: 0.9, color: pos.color, letterSpacing: "0.04em", textShadow: pos.glow ? `0 0 24px ${pos.color}` : "none" }}>
-              {pos.label}
+    <div className="surface corners fade-up" style={{
+      padding: pad, textAlign: "center", height: "100%",
+      background: isFirst ? "linear-gradient(180deg, rgba(34,197,224,0.12), var(--bg-2))" : "var(--bg-2)",
+      borderColor: isFirst ? "rgba(34,197,224,0.4)" : "var(--line-2)",
+    }}>
+      <div className="display" style={{ fontSize: rankFontSize, lineHeight: 1, color, letterSpacing: "0.04em", textShadow: glow ? `0 0 32px ${color}` : "none" }}>
+        {rank}
+      </div>
+      <div style={{
+        width: avatarSize, height: avatarSize, borderRadius: "50%", margin: "12px auto 8px",
+        background: "linear-gradient(135deg, var(--accent), var(--red))",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#fff", fontFamily: "var(--font-head)", fontWeight: 700, fontSize: avatarSize * 0.38,
+        boxShadow: isFirst ? "0 0 40px rgba(34,197,224,0.45)" : "none",
+      }}>{p.name.charAt(0)}</div>
+      <div className="head" style={{ fontSize: nameFontSize, color: "#ecead8" }}>{p.name}</div>
+      <div style={{ marginTop: 5, display: "flex", justifyContent: "center", gap: 5, flexWrap: "wrap" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "var(--fg-muted)" }}>
+          <ClassGlyph /> {t(`class_${p.class}` as "class_warrior")}
+        </span>
+        <span style={{ color: "var(--fg-faint)" }}>·</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+          <span style={{ width: 6, height: 6, borderRadius: 2, background: realm.fg }} />
+          <span style={{ fontSize: 11, color: realm.fg }}>{t(`realm_${p.realm}` as "realm_red")}</span>
+        </span>
+      </div>
+      <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-around" }}>
+        <div>
+          <div className="eyebrow" style={{ fontSize: 9 }}>{t("level")}</div>
+          <div className="display accent-text" style={{ fontSize: statFontSize }}>{p.level}</div>
+        </div>
+        <div>
+          <div className="eyebrow" style={{ fontSize: 9 }}>{t("guild")}</div>
+          <div style={{ fontSize: 11, marginTop: 4, color: "var(--fg-muted)" }}>{p.guild}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Podium({ top3 }: { top3: typeof players }) {
+  const [first, second, third] = top3;
+
+  return (
+    // align-items: flex-end = alulra igazítás → lépcsős hatás
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginTop: 20 }}>
+      {/* 2nd — bal, közepes magasság */}
+      <div style={{ flex: 1 }}>
+        {second && <PodiumCard p={second} rank="II" color="#d4d4d4" glow={false} scale="md" />}
+      </div>
+      {/* 1st — középen, legmagasabb */}
+      <div style={{ flex: 1 }}>
+        {first && (
+          <div style={{ position: "relative" }}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+              <CrownIcon size={48} style={{ color: "var(--accent-bright)", filter: "drop-shadow(0 0 12px var(--accent))" }} />
             </div>
-            <div style={{
-              width: 64, height: 64, borderRadius: "50%", margin: "16px auto 12px",
-              background: "linear-gradient(135deg, var(--accent), var(--red))",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#fff", fontFamily: "var(--font-head)", fontWeight: 700, fontSize: 26,
-              boxShadow: pos.idx === 0 ? "0 0 32px rgba(34,197,224,0.4)" : "none",
-            }}>{p.name.charAt(0)}</div>
-            <div className="head" style={{ fontSize: 17, color: "#ecead8" }}>{p.name}</div>
-            <div style={{ marginTop: 6, display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--fg-muted)" }}>
-                <ClassGlyph /> {t(`class_${p.class}` as "class_warrior")}
-              </span>
-              <span style={{ color: "var(--fg-faint)" }}>·</span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                <span style={{ width: 7, height: 7, borderRadius: 2, background: realm.fg }} />
-                <span style={{ fontSize: 12, color: realm.fg }}>{t(`realm_${p.realm}` as "realm_red")}</span>
-              </span>
-            </div>
-            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-around" }}>
-              <div>
-                <div className="eyebrow" style={{ fontSize: 9 }}>{t("level")}</div>
-                <div className="display accent-text" style={{ fontSize: 22 }}>{p.level}</div>
-              </div>
-              <div>
-                <div className="eyebrow" style={{ fontSize: 9 }}>{t("guild")}</div>
-                <div style={{ fontSize: 12, marginTop: 4, color: "var(--fg-muted)" }}>{p.guild}</div>
-              </div>
-            </div>
+            <PodiumCard p={first} rank="I" color="var(--accent-bright)" glow scale="lg" />
           </div>
-        );
-      })}
+        )}
+      </div>
+      {/* 3rd — jobb, legalacsonyabb */}
+      <div style={{ flex: 1 }}>
+        {third && <PodiumCard p={third} rank="III" color="#cd7f32" glow={false} scale="sm" />}
+      </div>
     </div>
   );
 }
@@ -199,7 +225,7 @@ export default function RankingPage() {
           </div>
         </div>
 
-        {showPodium && <Podium top3={players.slice(0, 3)} locale={locale} />}
+        {showPodium && <Podium top3={players.slice(0, 3)} />}
 
         {/* Tab bar */}
         <div style={{ display: "flex", gap: 4, marginTop: 20, borderBottom: "1px solid var(--line)", flexWrap: "wrap" }} className="wrap-tabs">
