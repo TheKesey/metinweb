@@ -190,5 +190,15 @@
 
   "guide_title": "Wiki",
   "guide_sub": "Everything you need to know to get started and reach endgame.",
+
+  "cta_eyebrow": "KESEY SERVER",
+  "cta_title": "Ready for an adventure?",
+  "cta_sub": "Join thousands of players. Free registration, instant access.",
+
+  "news_no_results": "No results for this filter.",
+  "news_end": "— No more news —",
+  "news_new_available": "▲ {count} new article(s) — click to view",
+
+  "related_news": "Related news",
   "search": "Search"
 }

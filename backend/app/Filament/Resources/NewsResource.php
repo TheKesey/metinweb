@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\NewsResource\Pages;
+use App\Models\Language;
 use App\Models\News;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -81,17 +82,8 @@ class NewsResource extends Resource
 
             Forms\Components\Section::make('Tartalom')
                 ->schema([
-                    Forms\Components\RichEditor::make('content')
-                        ->label('Tartalom')
-                        ->required()
-                        ->toolbarButtons([
-                            'bold', 'italic', 'underline', 'strike',
-                            'h2', 'h3',
-                            'bulletList', 'orderedList',
-                            'blockquote', 'codeBlock',
-                            'link',
-                            'undo', 'redo',
-                        ])
+                    Forms\Components\Tabs::make('Nyelvek')
+                        ->tabs(self::buildLanguageTabs())
                         ->columnSpanFull(),
                 ]),
         ]);
@@ -167,6 +159,52 @@ class NewsResource extends Resource
                 Tables\Actions\DeleteAction::make()->label('Törlés'),
             ])
             ->defaultSort('published_at', 'desc');
+    }
+
+    private static function buildLanguageTabs(): array
+    {
+        $toolbar = ['bold', 'italic', 'underline', 'strike', 'h2', 'h3', 'bulletList', 'orderedList', 'blockquote', 'codeBlock', 'link', 'undo', 'redo'];
+
+        try {
+            $languages = Language::active();
+        } catch (\Throwable) {
+            $languages = collect();
+        }
+
+        if ($languages->isEmpty()) {
+            return [
+                Forms\Components\Tabs\Tab::make('🇭🇺 Magyar (kötelező)')
+                    ->schema([
+                        Forms\Components\RichEditor::make('content')->label('Tartalom')->required()->toolbarButtons($toolbar),
+                    ]),
+            ];
+        }
+
+        return $languages->map(function ($lang) use ($toolbar) {
+            $label = trim("{$lang->flag} {$lang->name}") . ($lang->is_default ? ' (kötelező)' : ' (opcionális)');
+
+            if ($lang->is_default) {
+                return Forms\Components\Tabs\Tab::make($label)
+                    ->schema([
+                        Forms\Components\RichEditor::make('content')
+                            ->label('Tartalom')
+                            ->required()
+                            ->toolbarButtons($toolbar),
+                    ]);
+            }
+
+            return Forms\Components\Tabs\Tab::make($label)
+                ->schema([
+                    Forms\Components\TextInput::make("title_{$lang->code}")
+                        ->label('Cím')
+                        ->maxLength(255)
+                        ->dehydrated(false),
+                    Forms\Components\RichEditor::make("content_{$lang->code}")
+                        ->label('Tartalom')
+                        ->toolbarButtons($toolbar)
+                        ->dehydrated(false),
+                ]);
+        })->toArray();
     }
 
     public static function getPages(): array

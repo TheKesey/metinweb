@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -22,6 +23,19 @@ class News extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function translations(): HasMany
+    {
+        return $this->hasMany(NewsTranslation::class);
+    }
+
+    public function resolveLocale(string $locale): array
+    {
+        $trans = $this->translations->firstWhere('locale', $locale);
+        $title   = $trans?->title   ?? $this->title;
+        $content = $trans?->content ?? $this->content;
+        return compact('title', 'content');
     }
 
     public function getImageUrlAttribute(): ?string

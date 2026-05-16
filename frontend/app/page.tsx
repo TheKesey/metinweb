@@ -4,12 +4,41 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { useStore } from "@/lib/store";
-import { news, players, liveFeed, ONLINE_BASE, ONLINE_VARIANCE } from "@/lib/mock-data";
+import { players, liveFeed, ONLINE_BASE, ONLINE_VARIANCE } from "@/lib/mock-data";
 import { daysSinceLaunch, fmtNum, fmtShort } from "@/lib/utils";
 import { DownloadIcon, UsersIcon, ArrowRightIcon } from "@/components/brand/Icon";
 import { CLASS_ICONS, REALM_COLORS } from "@/components/brand/Icon";
 import type { Locale } from "@/types";
 import React from "react";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+const TAG_COLORS: Record<string, string> = { news: "tag-accent", patch: "tag-warn", event: "tag-success" };
+
+interface NewsItem {
+  id: number;
+  title: string;
+  image_url: string | null;
+  type: "news" | "patch" | "event";
+  published_at: string;
+  read_min: number;
+  user: { id: number; name: string };
+}
+
+function useLatestNews(locale: string) {
+  const [items, setItems] = React.useState<NewsItem[]>([]);
+  React.useEffect(() => {
+    const load = () =>
+      fetch(`${API_URL}/api/news?per_page=4&locale=${locale}`)
+        .then((r) => r.json())
+        .then((j) => setItems(j.data ?? []))
+        .catch(() => {});
+    load();
+    const id = setInterval(load, 30_000);
+    return () => clearInterval(id);
+  }, [locale]);
+  return items;
+}
 
 // ── Ticker ───────────────────────────────────────────────────────────────────
 function useTicker(base: number, variance: number, interval: number) {
@@ -96,26 +125,30 @@ function HeroStats() {
 }
 
 // ── NewsCard ─────────────────────────────────────────────────────────────────
-function NewsCard({ post, delay = 0 }: { post: typeof news[0]; delay?: number }) {
-  const locale = useLocale() as Locale;
+function NewsCard({ post, delay = 0 }: { post: NewsItem; delay?: number }) {
   const t = useTranslations();
-  const title   = locale === "hu" ? post.title_hu   : post.title_en;
-  const excerpt = locale === "hu" ? post.excerpt_hu : post.excerpt_en;
+  const date = new Date(post.published_at).toLocaleDateString("hu-HU", { year: "numeric", month: "short", day: "numeric" });
 
   return (
-    <Link href={`/news/${post.id}`} className="surface lift fade-up" style={{ padding: 18, display: "flex", flexDirection: "column", gap: 10, textDecoration: "none", animationDelay: `${delay}ms` }}>
-      <div className="img-ph" style={{ height: 100, borderRadius: "var(--radius-sm)" }} />
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span className={`tag ${post.tagColor}`} style={{ fontSize: 9 }}>{t(post.tag as "tag_event")}</span>
-        <span className="mono" style={{ fontSize: 10, color: "var(--fg-faint)" }}>{post.date}</span>
+    <Link href={`/news/${post.id}`} className="surface lift fade-up" style={{ padding: 0, display: "flex", flexDirection: "column", textDecoration: "none", animationDelay: `${delay}ms`, overflow: "hidden" }}>
+      <div style={{ height: 100, overflow: "hidden", flexShrink: 0 }}>
+        {post.image_url
+          ? <img src={post.image_url} alt={post.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          : <div className="img-ph" style={{ height: "100%", borderRadius: 0 }}><span>{post.type.toUpperCase()}</span></div>
+        }
       </div>
-      <div className="head" style={{ fontSize: 14, color: "#ecead8", lineHeight: 1.4, fontWeight: 600 }}>{title}</div>
-      <div style={{ fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.5, flex: 1 }}>{excerpt}</div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
-        <span className="mono" style={{ fontSize: 10, color: "var(--fg-faint)" }}>{post.author} · {post.read_min} {t("min_read")}</span>
-        <span style={{ color: "var(--accent)", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
-          {t("read_more")} <ArrowRightIcon size={11} />
-        </span>
+      <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span className={`tag ${TAG_COLORS[post.type]}`} style={{ fontSize: 9 }}>{t(`tag_${post.type}` as "tag_news")}</span>
+          <span className="mono" style={{ fontSize: 10, color: "var(--fg-faint)" }}>{date}</span>
+        </div>
+        <div className="head" style={{ fontSize: 14, color: "#ecead8", lineHeight: 1.4, fontWeight: 600, flex: 1 }}>{post.title}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
+          <span className="mono" style={{ fontSize: 10, color: "var(--fg-faint)" }}>{post.user.name} · {post.read_min} {t("min_read")}</span>
+          <span style={{ color: "var(--accent)", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+            {t("read_more")} <ArrowRightIcon size={11} />
+          </span>
+        </div>
       </div>
     </Link>
   );
@@ -197,14 +230,14 @@ function CTAStrip() {
   return (
     <div className="surface corners cta-strip" style={{ padding: "48px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 32, background: "linear-gradient(135deg, rgba(34,197,224,0.08) 0%, rgba(192,51,74,0.06) 100%)", borderColor: "rgba(34,197,224,0.2)" }}>
       <div style={{ maxWidth: 480 }}>
-        <div className="eyebrow" style={{ color: "var(--accent)", marginBottom: 8 }}>KESEY SZERVER</div>
-        <h2 className="display" style={{ fontSize: 48, lineHeight: 1, color: "#ecead8", letterSpacing: "0.02em" }}>Készen állsz a kalandra?</h2>
-        <p style={{ color: "var(--fg-muted)", fontSize: 14, marginTop: 12, lineHeight: 1.6 }}>Csatlakozz több ezer játékoshoz. Ingyenes regisztráció, azonnali belépés.</p>
+        <div className="eyebrow" style={{ color: "var(--accent)", marginBottom: 8 }}>{t("cta_eyebrow")}</div>
+        <h2 className="display" style={{ fontSize: 48, lineHeight: 1, color: "#ecead8", letterSpacing: "0.02em" }}>{t("cta_title")}</h2>
+        <p style={{ color: "var(--fg-muted)", fontSize: 14, marginTop: 12, lineHeight: 1.6 }}>{t("cta_sub")}</p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, flexShrink: 0 }}>
         <Link href="/download" className="btn btn-primary btn-lg"><DownloadIcon size={16} /> {t("download_client")}</Link>
         {!user && <button onClick={() => setAuthModal("register")} className="btn btn-secondary btn-lg">{t("create_account")}</button>}
-        <Link href="/guide" className="btn btn-ghost btn-lg" style={{ textAlign: "center" }}>Kalauz</Link>
+        <Link href="/guide" className="btn btn-ghost btn-lg" style={{ textAlign: "center" }}>{t("nav_guide")}</Link>
       </div>
     </div>
   );
@@ -226,6 +259,8 @@ function SectionTitle({ kicker, title, action }: { kicker?: string; title: strin
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const t = useTranslations();
+  const locale = useLocale();
+  const latestNews = useLatestNews(locale);
 
   return (
     <div className="page-enter">
@@ -239,7 +274,12 @@ export default function HomePage() {
               action={<Link href="/news" className="btn btn-ghost btn-sm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>{t("view_all")} <ArrowRightIcon size={12} /></Link>}
             />
             <div className="grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              {news.slice(0, 4).map((n, i) => <NewsCard key={n.id} post={n} delay={i * 60} />)}
+              {latestNews.length === 0
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="surface" style={{ height: 220, borderRadius: "var(--radius)", background: "var(--bg-2)", animation: "pulse 1.5s ease-in-out infinite" }} />
+                  ))
+                : latestNews.map((n, i) => <NewsCard key={n.id} post={n} delay={i * 60} />)
+              }
             </div>
           </div>
           <div>

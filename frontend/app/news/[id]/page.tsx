@@ -3,7 +3,7 @@
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/brand/Icon";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -32,7 +32,8 @@ function formatDate(iso: string) {
 }
 
 export default function NewsArticlePage({ params }: { params: Promise<{ id: string }> }) {
-  const t = useTranslations();
+  const t      = useTranslations();
+  const locale = useLocale();
   const { id } = use(params);
 
   const [article, setArticle] = useState<NewsItem | null>(null);
@@ -43,14 +44,14 @@ export default function NewsArticlePage({ params }: { params: Promise<{ id: stri
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`${API_URL}/api/news/${id}`);
+        const res = await fetch(`${API_URL}/api/news/${id}?locale=${locale}`);
         if (res.status === 404) { setMissing(true); return; }
         if (!res.ok) throw new Error();
         const data: NewsItem = await res.json();
         setArticle(data);
 
         // Related: fetch latest 4, exclude current
-        const rel = await fetch(`${API_URL}/api/news?per_page=4`);
+        const rel = await fetch(`${API_URL}/api/news?per_page=4&locale=${locale}`);
         if (rel.ok) {
           const relData = await rel.json();
           setRelated((relData.data as NewsItem[]).filter((n) => n.id !== data.id).slice(0, 3));
@@ -62,7 +63,7 @@ export default function NewsArticlePage({ params }: { params: Promise<{ id: stri
       }
     }
     load();
-  }, [id]);
+  }, [id, locale]);
 
   if (missing) notFound();
 
@@ -128,9 +129,8 @@ export default function NewsArticlePage({ params }: { params: Promise<{ id: stri
         {related.length > 0 && (
           <section style={{ marginBottom: 80 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-              <div className="eyebrow" style={{ marginBottom: 0 }}>MORE</div>
               <h2 className="head sect-rule" style={{ fontSize: 20, fontWeight: 700, margin: 0, gap: 12 }}>
-                További hírek
+                {t("related_news")}
               </h2>
             </div>
             <div className="grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>

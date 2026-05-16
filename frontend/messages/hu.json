@@ -190,5 +190,15 @@
 
   "guide_title": "Wiki",
   "guide_sub": "Minden, amit tudnod kell az induláshoz és az endgame-hez.",
+
+  "cta_eyebrow": "KESEY SZERVER",
+  "cta_title": "Készen állsz a kalandra?",
+  "cta_sub": "Csatlakozz több ezer játékoshoz. Ingyenes regisztráció, azonnali belépés.",
+
+  "news_no_results": "Nincs találat ezzel a szűrővel.",
+  "news_end": "— Nincs több hír —",
+  "news_new_available": "▲ {count} új hír érkezett — kattints a megtekintéshez",
+
+  "related_news": "További hírek",
   "search": "Keresés"
 }

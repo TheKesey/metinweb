@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { ArrowRightIcon } from "@/components/brand/Icon";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const PER_PAGE = 12;
+const POLL_MS  = 30_000;
 
 type NewsType = "news" | "patch" | "event";
 
@@ -14,17 +15,11 @@ interface NewsItem {
   id: number;
   title: string;
   slug: string;
-  content: string;
   image_url: string | null;
   type: NewsType;
   published_at: string;
   read_min: number;
   user: { id: number; name: string };
-}
-
-interface ApiResponse {
-  data: NewsItem[];
-  meta: { current_page: number; last_page: number; total: number };
 }
 
 const TYPE_COLORS: Record<NewsType, string> = {
@@ -128,57 +123,116 @@ function NewsCard({ item, index }: { item: NewsItem; index: number }) {
 }
 
 export default function NewsPage() {
-  const t = useTranslations();
-  const [filter, setFilter] = useState<Filter>("all");
-  const [items, setItems] = useState<NewsItem[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const t         = useTranslations();
+  const locale    = useLocale();
+  const localeRef = useRef(locale);
+  localeRef.current = locale;
+  const [filter, setFilter]           = useState<Filter>("all");
+  const [items, setItems]             = useState<NewsItem[]>([]);
+  const [pendingNew, setPendingNew]   = useState<NewsItem[]>([]);
+  const [hasMore, setHasMore]         = useState(true);
+  const [loading, setLoading]         = useState(false);
+  const [initialLoading, setInitial]  = useState(true);
+  const sentinelRef  = useRef<HTMLDivElement>(null);
+  const oldestId     = useRef<number | null>(null);
+  const newestId     = useRef<number | null>(null);
   const activeFilter = useRef(filter);
 
-  const fetchNews = useCallback(async (pageNum: number, type: Filter, reset: boolean) => {
+  // ── helpers ───────────────────────────────────────────────────────────────
+  function buildTypeParam(f: Filter) {
+    return f !== "all" ? `&type=${f}` : "";
+  }
+
+  function updateCursors(data: NewsItem[], reset: boolean) {
+    if (data.length === 0) return;
+    if (reset || newestId.current === null) newestId.current = data[0].id;
+    oldestId.current = data[data.length - 1].id;
+  }
+
+  // ── initial / filter-change load ─────────────────────────────────────────
+  const loadInitial = useCallback(async (f: Filter) => {
+    setInitial(true);
+    setPendingNew([]);
+    oldestId.current = null;
+    newestId.current = null;
+    try {
+      const res  = await fetch(`${API_URL}/api/news?per_page=${PER_PAGE}&locale=${localeRef.current}${buildTypeParam(f)}`);
+      const json = await res.json();
+      const data: NewsItem[] = json.data ?? [];
+      setItems(data);
+      setHasMore(json.has_more ?? false);
+      updateCursors(data, true);
+    } catch {
+      setHasMore(false);
+    } finally {
+      setInitial(false);
+    }
+  }, []);
+
+  // ── load older (infinite scroll) ─────────────────────────────────────────
+  const loadOlder = useCallback(async () => {
+    if (loading || !hasMore || oldestId.current === null) return;
     setLoading(true);
     try {
-      const typeParam = type !== "all" ? `&type=${type}` : "";
-      const res = await fetch(`${API_URL}/api/news?page=${pageNum}&per_page=${PER_PAGE}${typeParam}`);
-      if (!res.ok) throw new Error();
-      const json: ApiResponse = await res.json();
-      setItems((prev) => reset ? json.data : [...prev, ...json.data]);
-      setHasMore(json.meta.current_page < json.meta.last_page);
-      setPage(json.meta.current_page + 1);
+      const res  = await fetch(
+        `${API_URL}/api/news?per_page=${PER_PAGE}&locale=${localeRef.current}&before_id=${oldestId.current}${buildTypeParam(activeFilter.current)}`
+      );
+      const json = await res.json();
+      const data: NewsItem[] = json.data ?? [];
+      setItems((prev) => [...prev, ...data]);
+      setHasMore(json.has_more ?? false);
+      if (data.length > 0) oldestId.current = data[data.length - 1].id;
     } catch {
       setHasMore(false);
     } finally {
       setLoading(false);
-      setInitialLoading(false);
     }
-  }, []);
+  }, [loading, hasMore]);
 
-  // Filter change: reset
+  // ── filter change ─────────────────────────────────────────────────────────
   useEffect(() => {
     activeFilter.current = filter;
-    setInitialLoading(true);
-    setPage(1);
-    setHasMore(true);
-    fetchNews(1, filter, true);
-  }, [filter, fetchNews]);
+    loadInitial(filter);
+  }, [filter, loadInitial]);
 
-  // Intersection observer for infinite scroll
+  // ── poll for new items ────────────────────────────────────────────────────
+  useEffect(() => {
+    const poll = async () => {
+      if (newestId.current === null) return;
+      try {
+        const res  = await fetch(
+          `${API_URL}/api/news?after_id=${newestId.current}&locale=${localeRef.current}${buildTypeParam(activeFilter.current)}`
+        );
+        const json = await res.json();
+        const data: NewsItem[] = json.data ?? [];
+        if (data.length > 0) setPendingNew(data);
+      } catch {}
+    };
+    const id = setInterval(poll, POLL_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  // ── prepend pending new items ─────────────────────────────────────────────
+  function applyPending() {
+    setItems((prev) => [...pendingNew, ...prev]);
+    newestId.current = pendingNew[0].id;
+    setPendingNew([]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ── intersection observer ─────────────────────────────────────────────────
   useEffect(() => {
     if (!sentinelRef.current) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMore && !loading) {
-        fetchNews(page, activeFilter.current, false);
-      }
-    }, { rootMargin: "200px" });
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting) loadOlder(); },
+      { rootMargin: "200px" }
+    );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loading, page, fetchNews]);
+  }, [loadOlder]);
 
   const featured = filter === "all" && items.length > 0 ? items[0] : null;
-  const grid = featured ? items.slice(1) : items;
+  const grid     = featured ? items.slice(1) : items;
 
   return (
     <div className="page-enter">
@@ -210,6 +264,23 @@ export default function NewsPage() {
           ))}
         </div>
 
+        {/* New items banner */}
+        {pendingNew.length > 0 && (
+          <button
+            onClick={applyPending}
+            style={{
+              display: "block", width: "100%", marginBottom: 16,
+              padding: "10px 16px", borderRadius: "var(--radius)",
+              background: "rgba(34,197,224,0.12)", border: "1px solid rgba(34,197,224,0.35)",
+              color: "var(--accent-bright)", cursor: "pointer", fontSize: 13,
+              fontFamily: "var(--font-head)", fontWeight: 600, letterSpacing: "0.04em",
+              textAlign: "center",
+            }}
+          >
+            {t("news_new_available", { count: pendingNew.length })}
+          </button>
+        )}
+
         {initialLoading && (
           <div style={{ textAlign: "center", padding: "80px 0", color: "var(--fg-muted)" }}>
             {t("loading")}
@@ -218,7 +289,7 @@ export default function NewsPage() {
 
         {!initialLoading && items.length === 0 && (
           <div className="surface" style={{ padding: 60, textAlign: "center", color: "var(--fg-muted)", marginBottom: 40 }}>
-            Nincs találat ezzel a szűrővel.
+            {t("news_no_results")}
           </div>
         )}
 
@@ -243,7 +314,7 @@ export default function NewsPage() {
         )}
         {!hasMore && items.length > 0 && (
           <div style={{ textAlign: "center", padding: "32px 0", color: "var(--fg-faint)", fontSize: 13 }}>
-            — Nincs több hír —
+            {t("news_end")}
           </div>
         )}
 
