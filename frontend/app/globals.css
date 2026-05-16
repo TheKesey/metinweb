@@ -460,6 +460,15 @@ a:hover { color: var(--accent-bright); }
 .news-content img  { max-width: 100%; height: auto; border-radius: 6px; margin: 0.75rem 0; display: block; }
 .news-content strong { color: #ecead8; font-weight: 700; }
 
+/* TipTap grid layout */
+.news-content [data-type="grid"] { display: grid; gap: 24px; margin: 1.5rem 0; }
+.news-content [data-type="grid"][data-cols="2"] { grid-template-columns: 1fr 1fr; }
+.news-content [data-type="grid"][data-cols="3"] { grid-template-columns: 1fr 1fr 1fr; }
+.news-content [data-type="grid-column"] { min-width: 0; }
+@media (max-width: 640px) {
+  .news-content [data-type="grid"] { grid-template-columns: 1fr !important; }
+}
+
 .sect-rule {
   display: flex;
   align-items: center;

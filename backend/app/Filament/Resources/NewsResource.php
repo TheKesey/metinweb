@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\NewsResource\Pages;
 use App\Models\Language;
 use App\Models\News;
+use FilamentTiptapEditor\Enums\TiptapOutput;
+use FilamentTiptapEditor\TiptapEditor;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -157,7 +159,17 @@ class NewsResource extends Resource
 
     private static function buildLanguageTabs(): array
     {
-        $toolbar = ['bold', 'italic', 'underline', 'strike', 'h2', 'h3', 'bulletList', 'orderedList', 'blockquote', 'codeBlock', 'link', 'attachFiles', 'undo', 'redo'];
+        $tools = [
+            'bold', 'italic', 'underline', 'strike',
+            '|',
+            'heading',
+            '|',
+            'bullet-list', 'ordered-list', 'blockquote', 'code-block',
+            '|',
+            'link', 'media', 'grid-builder',
+            '|',
+            'undo', 'redo',
+        ];
 
         try {
             $languages = Language::active();
@@ -169,12 +181,12 @@ class NewsResource extends Resource
             return [
                 Forms\Components\Tabs\Tab::make('🇭🇺 Magyar (kötelező)')
                     ->schema([
-                        Forms\Components\RichEditor::make('content')->label('Tartalom')->required()->toolbarButtons($toolbar)->fileAttachmentsDisk('public')->fileAttachmentsDirectory('news-content'),
+                        self::makeTiptap('content', required: true, tools: $tools),
                     ]),
             ];
         }
 
-        return $languages->map(function ($lang) use ($toolbar) {
+        return $languages->map(function ($lang) use ($tools) {
             $label = trim("{$lang->flag} {$lang->name}") . ($lang->is_default ? ' (kötelező)' : ' (opcionális)');
 
             if ($lang->is_default) {
@@ -190,12 +202,7 @@ class NewsResource extends Resource
                                     $set('slug', Str::slug($state));
                                 }
                             }),
-                        Forms\Components\RichEditor::make('content')
-                            ->label('Tartalom')
-                            ->required()
-                            ->toolbarButtons($toolbar)
-                            ->fileAttachmentsDisk('public')
-                            ->fileAttachmentsDirectory('news-content'),
+                        self::makeTiptap('content', required: true, tools: $tools),
                     ]);
             }
 
@@ -204,13 +211,23 @@ class NewsResource extends Resource
                     Forms\Components\TextInput::make("title_{$lang->code}")
                         ->label('Cím')
                         ->maxLength(255),
-                    Forms\Components\RichEditor::make("content_{$lang->code}")
-                        ->label('Tartalom')
-                        ->toolbarButtons($toolbar)
-                        ->fileAttachmentsDisk('public')
-                        ->fileAttachmentsDirectory('news-content'),
+                    self::makeTiptap("content_{$lang->code}", required: false, tools: $tools),
                 ]);
         })->toArray();
+    }
+
+    private static function makeTiptap(string $field, bool $required, array $tools): TiptapEditor
+    {
+        $editor = TiptapEditor::make($field)
+            ->label('Tartalom')
+            ->tools($tools)
+            ->output(TiptapOutput::Html)
+            ->disk('public')
+            ->directory('news-content')
+            ->maxFileSize(5120)
+            ->columnSpanFull();
+
+        return $required ? $editor->required() : $editor;
     }
 
     public static function getPages(): array
