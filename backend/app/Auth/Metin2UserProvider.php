@@ -54,9 +54,10 @@ class Metin2UserProvider implements UserProvider
         $stored = $user->getAuthPassword();
 
         return match ($this->hashAlgo) {
-            'bcrypt' => password_verify($plain, $stored),
-            'sha1'   => sha1($plain) === strtolower($stored),
-            default  => md5($plain) === strtolower($stored),
+            'bcrypt'          => password_verify($plain, $stored),
+            'sha1'            => sha1($plain) === strtolower($stored),
+            'mysql_password'  => ('*' . strtoupper(sha1(sha1($plain, true)))) === $stored,
+            default           => md5($plain) === strtolower($stored),
         };
     }
 

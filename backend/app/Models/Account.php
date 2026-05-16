@@ -21,7 +21,7 @@ class Account extends Model
 
     public function verifyPassword(string $plain): bool
     {
-        return md5($plain) === $this->password;
+        return '*' . strtoupper(sha1(sha1($plain, true))) === $this->password;
     }
 
     public static function findByLogin(string $login): ?self

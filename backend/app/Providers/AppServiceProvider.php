@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
             return new Metin2UserProvider(
                 connection: $config['connection'] ?? 'account',
                 table: $config['table'] ?? 'account',
-                hashAlgo: $config['hash'] ?? 'md5',
+                hashAlgo: $config['hash'] ?? 'mysql_password',
             );
         });
     }

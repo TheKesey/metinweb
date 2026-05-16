@@ -64,7 +64,7 @@ class AuthController extends Controller
 
         DB::connection('account')->table('account')->insert([
             'login'       => $request->login,
-            'password'    => md5($request->password),
+            'password'    => '*' . strtoupper(sha1(sha1($request->password, true))),
             'email'       => $request->email,
             'status'      => 'OK',
             'create_time' => now()->format('Y-m-d H:i:s'),
