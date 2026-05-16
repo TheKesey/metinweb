@@ -189,11 +189,11 @@ export default function NewsPage() {
     }
   }, [loading, hasMore]);
 
-  // ── filter change ─────────────────────────────────────────────────────────
+  // ── filter change / locale change ────────────────────────────────────────
   useEffect(() => {
     activeFilter.current = filter;
     loadInitial(filter);
-  }, [filter, loadInitial]);
+  }, [filter, locale, loadInitial]);
 
   // ── poll for new items ────────────────────────────────────────────────────
   useEffect(() => {

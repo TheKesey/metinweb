@@ -23,18 +23,26 @@ class NewsResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
+            Forms\Components\Section::make('Borítókép')
+                ->schema([
+                    Forms\Components\FileUpload::make('image')
+                        ->label('Kép')
+                        ->image()
+                        ->disk('public')
+                        ->directory('news')
+                        ->imageEditor()
+                        ->columnSpanFull(),
+                ]),
+
+            Forms\Components\Section::make('Tartalom')
+                ->schema([
+                    Forms\Components\Tabs::make('Nyelvek')
+                        ->tabs(self::buildLanguageTabs())
+                        ->columnSpanFull(),
+                ]),
+
             Forms\Components\Section::make('Alapadatok')
                 ->schema([
-                    Forms\Components\TextInput::make('title')
-                        ->label('Cím')
-                        ->required()
-                        ->maxLength(255)
-                        ->live(onBlur: true)
-                        ->afterStateUpdated(function (string $operation, $state, Forms\Set $set) {
-                            if ($operation === 'create') {
-                                $set('slug', Str::slug($state));
-                            }
-                        }),
                     Forms\Components\TextInput::make('slug')
                         ->label('Slug')
                         ->required()
@@ -68,24 +76,6 @@ class NewsResource extends Resource
                         ->nullable()
                         ->seconds(false),
                 ])->columns(2),
-
-            Forms\Components\Section::make('Borítókép')
-                ->schema([
-                    Forms\Components\FileUpload::make('image')
-                        ->label('Kép')
-                        ->image()
-                        ->disk('public')
-                        ->directory('news')
-                        ->imageEditor()
-                        ->columnSpanFull(),
-                ]),
-
-            Forms\Components\Section::make('Tartalom')
-                ->schema([
-                    Forms\Components\Tabs::make('Nyelvek')
-                        ->tabs(self::buildLanguageTabs())
-                        ->columnSpanFull(),
-                ]),
         ]);
     }
 
@@ -186,6 +176,16 @@ class NewsResource extends Resource
             if ($lang->is_default) {
                 return Forms\Components\Tabs\Tab::make($label)
                     ->schema([
+                        Forms\Components\TextInput::make('title')
+                            ->label('Cím')
+                            ->required()
+                            ->maxLength(255)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (string $operation, $state, Forms\Set $set) {
+                                if ($operation === 'create') {
+                                    $set('slug', Str::slug($state));
+                                }
+                            }),
                         Forms\Components\RichEditor::make('content')
                             ->label('Tartalom')
                             ->required()
